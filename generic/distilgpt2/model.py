@@ -137,134 +137,135 @@ class Model:
 
         self.model = self.model.to(self.device)
 
-        for epoch_i in range(0, epochs):
 
-            # ========================================
-            #               Training
-            # ========================================
+        try:
+            for epoch_i in range(0, epochs):
 
-            print("")
-            print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
-            print('Training...')
+                # ========================================
+                #               Training
+                # ========================================
 
-            t0 = time.time()
+                print("")
+                print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
+                print('Training...')
 
-            total_train_loss = 0
+                t0 = time.time()
 
-            self.model.train()
+                total_train_loss = 0
 
-            for step, batch in enumerate(train_dataloader):
+                self.model.train()
 
-                b_input_ids = batch[0].to(self.device)
-                b_labels = batch[0].to(self.device)
-                b_masks = batch[1].to(self.device)
+                for step, batch in enumerate(train_dataloader):
 
-                self.model.zero_grad()
+                    b_input_ids = batch[0].to(self.device)
+                    b_labels = batch[0].to(self.device)
+                    b_masks = batch[1].to(self.device)
 
-                outputs = self.model(  b_input_ids,
-                                labels=b_labels,
-                                attention_mask = b_masks,
-                                token_type_ids=None
-                                )
+                    self.model.zero_grad()
 
-                loss = outputs[0]
-
-                batch_loss = loss.item()
-                total_train_loss += batch_loss
-
-                # Get sample every x batches.
-                if step % sample_every == 0 and not step == 0:
-
-                    elapsed = model.format_time(time.time() - t0)
-                    print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(train_dataloader), batch_loss, elapsed))
-
-                    self.model.eval()
-
-                    sample_outputs = self.model.generate(
-                                            bos_token_id=random.randint(1,30000),
-                                            do_sample=True,
-                                            top_k=50,
-                                            max_length = 200,
-                                            top_p=0.95,
-                                            num_return_sequences=1
-                                        )
-                    for i, sample_output in enumerate(sample_outputs):
-                        print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
-
-                    self.model.train()
-
-                loss.backward()
-
-                optimizer.step()
-
-                scheduler.step()
-
-            # Calculate the average loss over all of the batches.
-            avg_train_loss = total_train_loss / len(train_dataloader)
-
-            # Measure how long this epoch took.
-            training_time = model.format_time(time.time() - t0)
-
-            print("")
-            print("  Average training loss: {0:.2f}".format(avg_train_loss))
-            print("  Training epoch took: {:}".format(training_time))
-
-            # ========================================
-            #               Validation
-            # ========================================
-
-            print("")
-            print("Running Validation...")
-
-            t0 = time.time()
-
-            self.model.eval()
-
-            total_eval_loss = 0
-            nb_eval_steps = 0
-
-            # Evaluate data for one epoch
-            for batch in validation_dataloader:
-
-                b_input_ids = batch[0].to(self.device)
-                b_labels = batch[0].to(self.device)
-                b_masks = batch[1].to(self.device)
-
-                with torch.no_grad():
-
-                    outputs  = self.model(b_input_ids,
-        #                            token_type_ids=None,
+                    outputs = self.model(  b_input_ids,
+                                    labels=b_labels,
                                     attention_mask = b_masks,
-                                    labels=b_labels)
+                                    token_type_ids=None
+                                    )
 
                     loss = outputs[0]
 
-                batch_loss = loss.item()
-                total_eval_loss += batch_loss
+                    batch_loss = loss.item()
+                    total_train_loss += batch_loss
 
-            avg_val_loss = total_eval_loss / len(validation_dataloader)
+                    # Get sample every x batches.
+                    if step % sample_every == 0 and not step == 0:
 
-            validation_time = model.format_time(time.time() - t0)
+                        elapsed = model.format_time(time.time() - t0)
+                        print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(train_dataloader), batch_loss, elapsed))
 
-            print("  Validation Loss: {0:.2f}".format(avg_val_loss))
-            print("  Validation took: {:}".format(validation_time))
+                        self.model.eval()
 
-            # Record all statistics from this epoch.
-            training_stats.append(
-                {
-                    'epoch': epoch_i + 1,
-                    'Training Loss': avg_train_loss,
-                    'Valid. Loss': avg_val_loss,
-                    'Training Time': training_time,
-                    'Validation Time': validation_time
-                }
-            )
+                        sample_outputs = self.model.generate(
+                                                bos_token_id=random.randint(1,30000),
+                                                do_sample=True,
+                                                top_k=50,
+                                                max_length = 200,
+                                                top_p=0.95,
+                                                num_return_sequences=1
+                                            )
+                        for i, sample_output in enumerate(sample_outputs):
+                            print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
 
-        print("")
-        print("Training complete!")
-        print("Total training took {:} (h:mm:ss)".format(model.format_time(time.time()-total_t0)))
+                        self.model.train()
 
-        try:
+                    loss.backward()
+
+                    optimizer.step()
+
+                    scheduler.step()
+
+                # Calculate the average loss over all of the batches.
+                avg_train_loss = total_train_loss / len(train_dataloader)
+
+                # Measure how long this epoch took.
+                training_time = model.format_time(time.time() - t0)
+
+                print("")
+                print("  Average training loss: {0:.2f}".format(avg_train_loss))
+                print("  Training epoch took: {:}".format(training_time))
+
+                # ========================================
+                #               Validation
+                # ========================================
+
+                print("")
+                print("Running Validation...")
+
+                t0 = time.time()
+
+                self.model.eval()
+
+                total_eval_loss = 0
+                nb_eval_steps = 0
+
+                # Evaluate data for one epoch
+                for batch in validation_dataloader:
+
+                    b_input_ids = batch[0].to(self.device)
+                    b_labels = batch[0].to(self.device)
+                    b_masks = batch[1].to(self.device)
+
+                    with torch.no_grad():
+
+                        outputs  = self.model(b_input_ids,
+            #                            token_type_ids=None,
+                                        attention_mask = b_masks,
+                                        labels=b_labels)
+
+                        loss = outputs[0]
+
+                    batch_loss = loss.item()
+                    total_eval_loss += batch_loss
+
+                avg_val_loss = total_eval_loss / len(validation_dataloader)
+
+                validation_time = model.format_time(time.time() - t0)
+
+                print("  Validation Loss: {0:.2f}".format(avg_val_loss))
+                print("  Validation took: {:}".format(validation_time))
+
+                # Record all statistics from this epoch.
+                training_stats.append(
+                    {
+                        'epoch': epoch_i + 1,
+                        'Training Loss': avg_train_loss,
+                        'Valid. Loss': avg_val_loss,
+                        'Training Time': training_time,
+                        'Validation Time': validation_time
+                    }
+                )
+
+            print("")
+            print("Training complete!")
+            print("Total training took {:} (h:mm:ss)".format(model.format_time(time.time()-total_t0)))
+
             model.save_finetuned_model(output_dir=config["OUTPUT_DIR"])
             status = "Success"
         except:
