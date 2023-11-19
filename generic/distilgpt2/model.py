@@ -136,6 +136,7 @@ class Model:
             total_t0 = time.time()
 
             training_stats = []
+            print(str(self.device))
 
             self.model = self.model.to(self.device)
 
