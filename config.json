@@ -1,0 +1,7 @@
+{
+    "DISTIL_GPT2_MODEL": "distilgpt2",
+    "PRE_TRAINED_MODEL": "assets/pytorch_model.bin",
+    "PRE_TRAINED_CONFIG": "assets/config.json",
+    "OUTPUT_DIR": "assets/",
+    "MAX_SEQUENCE_LEN": 160
+}
