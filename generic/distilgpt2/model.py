@@ -86,59 +86,60 @@ class Model:
 
     def retrain(self, texts):
         texts = texts.split("###")
-        dataset = GPT2Dataset(texts, self.tokenizer, max_length=40)
-
-        train_size = int(0.9 * len(dataset))
-        val_size = len(dataset) - train_size
-        
-        train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-
-        batch_size = 2
-        train_dataloader = DataLoader(
-            train_dataset,  # The training samples.
-            sampler = RandomSampler(train_dataset), # Select batches randomly
-            batch_size = batch_size # Trains with this batch size.
-        )
-
-        # For validation the order doesn't matter, so we'll just read them sequentially.
-        validation_dataloader = DataLoader(
-                    val_dataset, # The validation samples.
-                    sampler = SequentialSampler(val_dataset), # Pull out batches sequentially.
-                    batch_size = batch_size # Evaluate with this batch size.
-                )
-
-        # some parameters I cooked up that work reasonably well
-
-        epochs = 10
-        learning_rate = 5e-4
-        warmup_steps = 1e2
-        epsilon = 1e-8
-
-        # this produces sample output every 100 steps
-        sample_every = 100
-
-        optimizer = torch.optim.AdamW(self.model.parameters(),
-                  lr = learning_rate,
-                  eps = epsilon
-                )
-        # Total number of training steps is [number of batches] x [number of epochs].
-        # (Note that this is not the same as the number of training samples).
-        total_steps = len(train_dataloader) * epochs
-
-        # Create the learning rate scheduler.
-        # This changes the learning rate as the training loop progresses
-        scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                    num_warmup_steps = warmup_steps,
-                                                    num_training_steps = total_steps)
-
-        total_t0 = time.time()
-
-        training_stats = []
-
-        self.model = self.model.to(self.device)
-
 
         try:
+            dataset = GPT2Dataset(texts, self.tokenizer, max_length=40)
+
+            train_size = int(0.9 * len(dataset))
+            val_size = len(dataset) - train_size
+            
+            train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+
+            batch_size = 2
+            train_dataloader = DataLoader(
+                train_dataset,  # The training samples.
+                sampler = RandomSampler(train_dataset), # Select batches randomly
+                batch_size = batch_size # Trains with this batch size.
+            )
+
+            # For validation the order doesn't matter, so we'll just read them sequentially.
+            validation_dataloader = DataLoader(
+                        val_dataset, # The validation samples.
+                        sampler = SequentialSampler(val_dataset), # Pull out batches sequentially.
+                        batch_size = batch_size # Evaluate with this batch size.
+                    )
+
+            # some parameters I cooked up that work reasonably well
+
+            epochs = 10
+            learning_rate = 5e-4
+            warmup_steps = 1e2
+            epsilon = 1e-8
+
+            # this produces sample output every 100 steps
+            sample_every = 100
+
+            optimizer = torch.optim.AdamW(self.model.parameters(),
+                    lr = learning_rate,
+                    eps = epsilon
+                    )
+            # Total number of training steps is [number of batches] x [number of epochs].
+            # (Note that this is not the same as the number of training samples).
+            total_steps = len(train_dataloader) * epochs
+
+            # Create the learning rate scheduler.
+            # This changes the learning rate as the training loop progresses
+            scheduler = get_linear_schedule_with_warmup(optimizer,
+                                                        num_warmup_steps = warmup_steps,
+                                                        num_training_steps = total_steps)
+
+            total_t0 = time.time()
+
+            training_stats = []
+
+            self.model = self.model.to(self.device)
+
+
             for epoch_i in range(0, epochs):
 
                 # ========================================
