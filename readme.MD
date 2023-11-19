@@ -41,6 +41,18 @@ http POST http://127.0.0.1:8000/generate texts="Twitter Scrape CIKM,Cheng-Caverl
 
 In the code above to use the generate endpoint. This endpoint will generate the exact same number of your parameters.
 
+
+4. Deploy in AWS EC2
+
+When you have deploy the api in AWS EC2, you need to change the host in the code above to your public ip address. You can find the public ip address in the EC2 dashboard.
+
+If you want to run it in the background, you can use this code below on AWS EC2 terminal.
+
+```bash
+sudo python3 -m uvicorn generic.api:app --host 0.0.0.0 --port 8000 --reload
+```
+
+
 ## Support
 
 Found this repo usefull? Support this effort by giving a star on GitHub, and don't be shy to collaborate with me. Meet me in [instagram](https://www.instagram.com/jibi.bm2/).
