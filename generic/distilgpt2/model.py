@@ -150,7 +150,7 @@ class Model:
                 print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
                 print('Training...')
 
-                t0 = time.time()
+                # t0 = time.time()
 
                 total_train_loss = 0
 
@@ -178,8 +178,8 @@ class Model:
                     # Get sample every x batches.
                     if step % sample_every == 0 and not step == 0:
 
-                        elapsed = model.format_time(time.time() - t0)
-                        print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(train_dataloader), batch_loss, elapsed))
+                        # elapsed = model.format_time(time.time() - t0)
+                        # print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(train_dataloader), batch_loss, elapsed))
 
                         self.model.eval()
 
@@ -191,8 +191,8 @@ class Model:
                                                 top_p=0.95,
                                                 num_return_sequences=1
                                             )
-                        for i, sample_output in enumerate(sample_outputs):
-                            print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
+                        # for i, sample_output in enumerate(sample_outputs):
+                        #     print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
 
                         self.model.train()
 
@@ -206,11 +206,11 @@ class Model:
                 avg_train_loss = total_train_loss / len(train_dataloader)
 
                 # Measure how long this epoch took.
-                training_time = model.format_time(time.time() - t0)
+                # training_time = model.format_time(time.time() - t0)
 
-                print("")
-                print("  Average training loss: {0:.2f}".format(avg_train_loss))
-                print("  Training epoch took: {:}".format(training_time))
+                # print("")
+                # print("  Average training loss: {0:.2f}".format(avg_train_loss))
+                # print("  Training epoch took: {:}".format(training_time))
 
                 # ========================================
                 #               Validation
@@ -219,7 +219,7 @@ class Model:
                 print("")
                 print("Running Validation...")
 
-                t0 = time.time()
+                # t0 = time.time()
 
                 self.model.eval()
 
@@ -247,30 +247,30 @@ class Model:
 
                 avg_val_loss = total_eval_loss / len(validation_dataloader)
 
-                validation_time = model.format_time(time.time() - t0)
+                # validation_time = model.format_time(time.time() - t0)
 
-                print("  Validation Loss: {0:.2f}".format(avg_val_loss))
-                print("  Validation took: {:}".format(validation_time))
+                # print("  Validation Loss: {0:.2f}".format(avg_val_loss))
+                # print("  Validation took: {:}".format(validation_time))
 
                 # Record all statistics from this epoch.
-                training_stats.append(
-                    {
-                        'epoch': epoch_i + 1,
-                        'Training Loss': avg_train_loss,
-                        'Valid. Loss': avg_val_loss,
-                        'Training Time': training_time,
-                        'Validation Time': validation_time
-                    }
-                )
+                # training_stats.append(
+                #     {
+                #         'epoch': epoch_i + 1,
+                #         'Training Loss': avg_train_loss,
+                #         'Valid. Loss': avg_val_loss,
+                #         'Training Time': training_time,
+                #         'Validation Time': validation_time
+                #     }
+                # )
 
             print("")
             print("Training complete!")
-            print("Total training took {:} (h:mm:ss)".format(model.format_time(time.time()-total_t0)))
+            # print("Total training took {:} (h:mm:ss)".format(model.format_time(time.time()-total_t0)))
 
             model.save_finetuned_model(output_dir=config["OUTPUT_DIR"])
             status = "Success"
-        except:
-            status = "Error"
+        except Exception as e:
+            status = "Error retraining model: " + str(e)
         return status
         
         
