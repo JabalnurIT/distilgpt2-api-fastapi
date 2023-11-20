@@ -1,5 +1,5 @@
 {
-  "_name_or_path": "assets/pytorch_model.bin",
+  "_name_or_path": "distilgpt2",
   "_num_labels": 1,
   "activation_function": "gelu_new",
   "architectures": [
