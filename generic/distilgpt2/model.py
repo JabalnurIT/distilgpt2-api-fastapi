@@ -118,7 +118,7 @@ class Model:
         # this produces sample output every 100 steps
         sample_every = 100
 
-        self.optimizer = torch.optim.AdamW(self.model.parameters(),
+        optimizer = torch.optim.AdamW(self.model.parameters(),
                 lr = learning_rate,
                 eps = epsilon
                 )
@@ -128,11 +128,11 @@ class Model:
 
         # Create the learning rate scheduler.
         # This changes the learning rate as the training loop progresses
-        scheduler = get_linear_schedule_with_warmup(self.optimizer,
+        scheduler = get_linear_schedule_with_warmup(optimizer,
                                                     num_warmup_steps = warmup_steps,
                                                     num_training_steps = total_steps)
 
-        # total_t0 = time.time()
+        total_t0 = time.time()
 
         training_stats = []
 
@@ -149,14 +149,13 @@ class Model:
             print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
             print('Training...')
 
-            # t0 = time.time()
+            t0 = time.time()
 
             total_train_loss = 0
 
             self.model.train()
 
             for step, batch in enumerate(train_dataloader):
-                print('1')
 
                 b_input_ids = batch[0].to(self.device)
                 b_labels = batch[0].to(self.device)
@@ -176,11 +175,10 @@ class Model:
                 total_train_loss += batch_loss
 
                 # Get sample every x batches.
-                print('2')
                 if step % sample_every == 0 and not step == 0:
 
-                    # elapsed = model.format_time(time.time() - t0)
-                    # print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(train_dataloader), batch_loss, elapsed))
+                    elapsed = model.format_time(time.time() - t0)
+                    print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(train_dataloader), batch_loss, elapsed))
 
                     self.model.eval()
 
@@ -192,27 +190,26 @@ class Model:
                                             top_p=0.95,
                                             num_return_sequences=1
                                         )
-                    # for i, sample_output in enumerate(sample_outputs):
-                    #     print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
-                    print('3')
+                    for i, sample_output in enumerate(sample_outputs):
+                        print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
                     self.model.train()
-                print('4')
-                # loss.backward()
-                print('5')
-                # self.optimizer.step()
-                print('6')
+
+                loss.backward()
+
+                # optimizer.step()
+
                 # scheduler.step()
-                print('7')
+
 
             # Calculate the average loss over all of the batches.
             avg_train_loss = total_train_loss / len(train_dataloader)
 
             # Measure how long this epoch took.
-            # training_time = model.format_time(time.time() - t0)
+            training_time = model.format_time(time.time() - t0)
 
-            # print("")
-            # print("  Average training loss: {0:.2f}".format(avg_train_loss))
-            # print("  Training epoch took: {:}".format(training_time))
+            print("")
+            print("  Average training loss: {0:.2f}".format(avg_train_loss))
+            print("  Training epoch took: {:}".format(training_time))
 
             # ========================================
             #               Validation
@@ -221,7 +218,7 @@ class Model:
             print("")
             print("Running Validation...")
 
-            # t0 = time.time()
+            t0 = time.time()
 
             self.model.eval()
 
@@ -238,7 +235,7 @@ class Model:
                 with torch.no_grad():
 
                     outputs  = self.model(b_input_ids,
-        #                            token_type_ids=None,
+                                #    token_type_ids=None,
                                     attention_mask = b_masks,
                                     labels=b_labels)
 
@@ -249,27 +246,27 @@ class Model:
 
             avg_val_loss = total_eval_loss / len(validation_dataloader)
 
-            # validation_time = model.format_time(time.time() - t0)
+            validation_time = model.format_time(time.time() - t0)
 
-            # print("  Validation Loss: {0:.2f}".format(avg_val_loss))
-            # print("  Validation took: {:}".format(validation_time))
+            print("  Validation Loss: {0:.2f}".format(avg_val_loss))
+            print("  Validation took: {:}".format(validation_time))
 
             # Record all statistics from this epoch.
-            # training_stats.append(
-            #     {
-            #         'epoch': epoch_i + 1,
-            #         'Training Loss': avg_train_loss,
-            #         'Valid. Loss': avg_val_loss,
-            #         'Training Time': training_time,
-            #         'Validation Time': validation_time
-            #     }
-            # )
+            training_stats.append(
+                {
+                    'epoch': epoch_i + 1,
+                    'Training Loss': avg_train_loss,
+                    'Valid. Loss': avg_val_loss,
+                    'Training Time': training_time,
+                    'Validation Time': validation_time
+                }
+            )
 
         print("")
         print("Training complete!")
-        # print("Total training took {:} (h:mm:ss)".format(model.format_time(time.time()-total_t0)))
+        print("Total training took {:} (h:mm:ss)".format(model.format_time(time.time()-total_t0)))
         try:
-            self.model.save_finetuned_model(output_dir=config["OUTPUT_DIR"])
+            model.save_finetuned_model(output_dir=config["OUTPUT_DIR"])
             status = "Success"
         except Exception as e:
             status = "Error retraining model: " + str(e)
