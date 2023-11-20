@@ -133,7 +133,7 @@ class Model:
                                                         num_warmup_steps = warmup_steps,
                                                         num_training_steps = total_steps)
 
-            total_t0 = time.time()
+            # total_t0 = time.time()
 
             training_stats = []
 
@@ -270,7 +270,7 @@ class Model:
             print("Training complete!")
             # print("Total training took {:} (h:mm:ss)".format(model.format_time(time.time()-total_t0)))
 
-            model.save_finetuned_model(output_dir=config["OUTPUT_DIR"])
+            self.model.save_finetuned_model(output_dir=config["OUTPUT_DIR"])
             status = "Success"
         except Exception as e:
             status = "Error retraining model: " + str(e)

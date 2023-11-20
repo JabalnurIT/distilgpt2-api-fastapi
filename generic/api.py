@@ -10,9 +10,9 @@ class NaturalnessRequest(BaseModel):
     texts: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         # add example value
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "texts": "This is the first column of the first row, the second column of the first row, etc###This is the first column of the second row, the second column of the second row, etc###This is the first column of the third row, the second column of the third row, etc"
             }
