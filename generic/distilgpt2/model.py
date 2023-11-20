@@ -17,7 +17,7 @@ from transformers import DefaultFlowCallback, AdamW, get_linear_schedule_with_wa
 
 from .gpt2_dataset import GPT2Dataset
 
-from progress.bar import Bar
+from tqdm import tqdm
 
 import locale
 locale.getpreferredencoding = lambda: "UTF-8"
@@ -33,7 +33,7 @@ class Model:
 
         self.tokenizer = GPT2Tokenizer.from_pretrained(config["DISTIL_GPT2_MODEL"],bos_token='<|startoftext|>', eos_token='<|endoftext|>', pad_token='<|pad|>')
         
-        self.config = GPT2Config.from_json_file(config["PRE_TRAINED_CONFIG"])
+        self.config = GPT2Config.from_pretrained(config["PRE_TRAINED_CONFIG"], output_hidden_states=False)
 
         self.model = GPT2LMHeadModel.from_pretrained(config["PRE_TRAINED_MODEL"],config=self.config)
         self.model.resize_token_embeddings(len(self.tokenizer))
@@ -137,28 +137,48 @@ class Model:
             total_train_loss = 0
 
             self.model.train()
-            with Bar('Processing...') as bar:
-                for step, batch in enumerate(train_dataloader):
-                    bar.next()
 
-                    b_input_ids = batch[0].to(self.device)
-                    b_labels = batch[0].to(self.device)
-                    b_masks = batch[1].to(self.device)
+            for step, batch in enumerate(tqdm(train_dataloader, total=len(train_dataloader), desc="Processing")):
 
-                    self.model.zero_grad()
+                b_input_ids = batch[0].to(self.device)
+                b_labels = batch[0].to(self.device)
+                b_masks = batch[1].to(self.device)
 
-                    outputs = self.model(  b_input_ids,
-                                    labels=b_labels,
-                                    attention_mask = b_masks,
-                                    token_type_ids=None
-                                    )
+                self.model.zero_grad()
 
-                    loss = outputs[0]
+                outputs = self.model(  
+                    b_input_ids,
+                    labels=b_labels,
+                    attention_mask = b_masks,
+                    token_type_ids=None
+                )
 
-                    batch_loss = loss.item()
-                    total_train_loss += batch_loss
+                loss = outputs[0]
 
-                    loss.backward()
+                batch_loss = loss.item()
+                total_train_loss += batch_loss
+
+                # if step % sample_every == 0 and not step == 0:
+
+                #     elapsed = format_time(time.time() - t0)
+                #     print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(train_dataloader), batch_loss, elapsed))
+
+                #     model.eval()
+
+                #     sample_outputs = model.generate(
+                #                             bos_token_id=random.randint(1,30000),
+                #                             do_sample=True,
+                #                             top_k=50,
+                #                             max_length = 200,
+                #                             top_p=0.95,
+                #                             num_return_sequences=1
+                #                         )
+                #     for i, sample_output in enumerate(sample_outputs):
+                #         print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
+
+                #     model.train()
+
+                loss.backward()
 
             # Calculate the average loss over all of the batches.
             avg_train_loss = total_train_loss / len(train_dataloader)
@@ -178,7 +198,6 @@ class Model:
             print("Running Validation...")
 
             t0 = time.time()
-
             self.model.eval()
 
             total_eval_loss = 0

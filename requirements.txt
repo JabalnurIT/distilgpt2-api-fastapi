@@ -20,4 +20,4 @@ transformers==4.31.0
 pandas
 datasets
 git-lfs
-progress
+tqdm
