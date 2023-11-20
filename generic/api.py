@@ -26,7 +26,7 @@ class NaturalnessRetrainResponse(BaseModel):
     status: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "texts": "This is the first column of the first row, the second column of the first row, etc###This is the first column of the second row, the second column of the second row, etc###This is the first column of the third row, the second column of the third row, etc"
             }
@@ -36,7 +36,7 @@ class NaturalnessGenerateResponse(BaseModel):
     dataset: str
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "texts": "This is the first column of the first row, the second column of the first row, etc###This is the first column of the second row, the second column of the second row, etc###This is the first column of the third row, the second column of the third row, etc"
             }

@@ -87,189 +87,188 @@ class Model:
     def retrain(self, texts):
         texts = texts.split("###")
 
-        try:
-            dataset = GPT2Dataset(texts, self.tokenizer, max_length=40)
+        dataset = GPT2Dataset(texts, self.tokenizer, max_length=40)
 
-            train_size = int(0.9 * len(dataset))
-            val_size = len(dataset) - train_size
-            
-            train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+        train_size = int(0.9 * len(dataset))
+        val_size = len(dataset) - train_size
+        
+        train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-            batch_size = 2
-            train_dataloader = DataLoader(
-                train_dataset,  # The training samples.
-                sampler = RandomSampler(train_dataset), # Select batches randomly
-                batch_size = batch_size # Trains with this batch size.
-            )
+        batch_size = 2
+        train_dataloader = DataLoader(
+            train_dataset,  # The training samples.
+            sampler = RandomSampler(train_dataset), # Select batches randomly
+            batch_size = batch_size # Trains with this batch size.
+        )
 
-            # For validation the order doesn't matter, so we'll just read them sequentially.
-            validation_dataloader = DataLoader(
-                        val_dataset, # The validation samples.
-                        sampler = SequentialSampler(val_dataset), # Pull out batches sequentially.
-                        batch_size = batch_size # Evaluate with this batch size.
-                    )
+        # For validation the order doesn't matter, so we'll just read them sequentially.
+        validation_dataloader = DataLoader(
+                    val_dataset, # The validation samples.
+                    sampler = SequentialSampler(val_dataset), # Pull out batches sequentially.
+                    batch_size = batch_size # Evaluate with this batch size.
+                )
 
-            # some parameters I cooked up that work reasonably well
+        # some parameters I cooked up that work reasonably well
 
-            epochs = 10
-            learning_rate = 5e-4
-            warmup_steps = 1e2
-            epsilon = 1e-8
+        epochs = 10
+        learning_rate = 5e-4
+        warmup_steps = 1e2
+        epsilon = 1e-8
 
-            # this produces sample output every 100 steps
-            sample_every = 100
+        # this produces sample output every 100 steps
+        sample_every = 100
 
-            optimizer = torch.optim.AdamW(self.model.parameters(),
-                    lr = learning_rate,
-                    eps = epsilon
-                    )
-            # Total number of training steps is [number of batches] x [number of epochs].
-            # (Note that this is not the same as the number of training samples).
-            total_steps = len(train_dataloader) * epochs
+        optimizer = torch.optim.AdamW(self.model.parameters(),
+                lr = learning_rate,
+                eps = epsilon
+                )
+        # Total number of training steps is [number of batches] x [number of epochs].
+        # (Note that this is not the same as the number of training samples).
+        total_steps = len(train_dataloader) * epochs
 
-            # Create the learning rate scheduler.
-            # This changes the learning rate as the training loop progresses
-            scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                        num_warmup_steps = warmup_steps,
-                                                        num_training_steps = total_steps)
+        # Create the learning rate scheduler.
+        # This changes the learning rate as the training loop progresses
+        scheduler = get_linear_schedule_with_warmup(optimizer,
+                                                    num_warmup_steps = warmup_steps,
+                                                    num_training_steps = total_steps)
 
-            # total_t0 = time.time()
+        # total_t0 = time.time()
 
-            training_stats = []
+        training_stats = []
 
-            self.model = self.model.to(self.device)
+        self.model = self.model.to(self.device)
 
 
-            for epoch_i in range(0, epochs):
+        for epoch_i in range(0, epochs):
 
-                # ========================================
-                #               Training
-                # ========================================
+            # ========================================
+            #               Training
+            # ========================================
 
-                print("")
-                print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
-                print('Training...')
+            print("")
+            print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
+            print('Training...')
 
-                # t0 = time.time()
+            # t0 = time.time()
 
-                total_train_loss = 0
+            total_train_loss = 0
 
-                self.model.train()
+            self.model.train()
 
-                for step, batch in enumerate(train_dataloader):
-                    print('1')
+            for step, batch in enumerate(train_dataloader):
+                print('1')
 
-                    b_input_ids = batch[0].to(self.device)
-                    b_labels = batch[0].to(self.device)
-                    b_masks = batch[1].to(self.device)
+                b_input_ids = batch[0].to(self.device)
+                b_labels = batch[0].to(self.device)
+                b_masks = batch[1].to(self.device)
 
-                    self.model.zero_grad()
+                self.model.zero_grad()
 
-                    outputs = self.model(  b_input_ids,
-                                    labels=b_labels,
+                outputs = self.model(  b_input_ids,
+                                labels=b_labels,
+                                attention_mask = b_masks,
+                                token_type_ids=None
+                                )
+
+                loss = outputs[0]
+
+                batch_loss = loss.item()
+                total_train_loss += batch_loss
+
+                # Get sample every x batches.
+                print('2')
+                if step % sample_every == 0 and not step == 0:
+
+                    # elapsed = model.format_time(time.time() - t0)
+                    # print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(train_dataloader), batch_loss, elapsed))
+
+                    self.model.eval()
+
+                    sample_outputs = self.model.generate(
+                                            bos_token_id=random.randint(1,30000),
+                                            do_sample=True,
+                                            top_k=50,
+                                            max_length = 200,
+                                            top_p=0.95,
+                                            num_return_sequences=1
+                                        )
+                    # for i, sample_output in enumerate(sample_outputs):
+                    #     print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
+                    print('3')
+                    self.model.train()
+                print('4')
+                loss.backward()
+                print('5')
+                optimizer.step()
+                print('6')
+                scheduler.step()
+                print('7')
+
+            # Calculate the average loss over all of the batches.
+            avg_train_loss = total_train_loss / len(train_dataloader)
+
+            # Measure how long this epoch took.
+            # training_time = model.format_time(time.time() - t0)
+
+            # print("")
+            # print("  Average training loss: {0:.2f}".format(avg_train_loss))
+            # print("  Training epoch took: {:}".format(training_time))
+
+            # ========================================
+            #               Validation
+            # ========================================
+
+            print("")
+            print("Running Validation...")
+
+            # t0 = time.time()
+
+            self.model.eval()
+
+            total_eval_loss = 0
+            nb_eval_steps = 0
+
+            # Evaluate data for one epoch
+            for batch in validation_dataloader:
+
+                b_input_ids = batch[0].to(self.device)
+                b_labels = batch[0].to(self.device)
+                b_masks = batch[1].to(self.device)
+
+                with torch.no_grad():
+
+                    outputs  = self.model(b_input_ids,
+        #                            token_type_ids=None,
                                     attention_mask = b_masks,
-                                    token_type_ids=None
-                                    )
+                                    labels=b_labels)
 
                     loss = outputs[0]
 
-                    batch_loss = loss.item()
-                    total_train_loss += batch_loss
+                batch_loss = loss.item()
+                total_eval_loss += batch_loss
 
-                    # Get sample every x batches.
-                    print('2')
-                    if step % sample_every == 0 and not step == 0:
+            avg_val_loss = total_eval_loss / len(validation_dataloader)
 
-                        # elapsed = model.format_time(time.time() - t0)
-                        # print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(train_dataloader), batch_loss, elapsed))
+            # validation_time = model.format_time(time.time() - t0)
 
-                        self.model.eval()
+            # print("  Validation Loss: {0:.2f}".format(avg_val_loss))
+            # print("  Validation took: {:}".format(validation_time))
 
-                        sample_outputs = self.model.generate(
-                                                bos_token_id=random.randint(1,30000),
-                                                do_sample=True,
-                                                top_k=50,
-                                                max_length = 200,
-                                                top_p=0.95,
-                                                num_return_sequences=1
-                                            )
-                        # for i, sample_output in enumerate(sample_outputs):
-                        #     print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
-                        print('3')
-                        self.model.train()
-                    print('4')
-                    loss.backward()
-                    print('5')
-                    optimizer.step()
-                    print('6')
-                    scheduler.step()
-                    print('7')
+            # Record all statistics from this epoch.
+            # training_stats.append(
+            #     {
+            #         'epoch': epoch_i + 1,
+            #         'Training Loss': avg_train_loss,
+            #         'Valid. Loss': avg_val_loss,
+            #         'Training Time': training_time,
+            #         'Validation Time': validation_time
+            #     }
+            # )
 
-                # Calculate the average loss over all of the batches.
-                avg_train_loss = total_train_loss / len(train_dataloader)
-
-                # Measure how long this epoch took.
-                # training_time = model.format_time(time.time() - t0)
-
-                # print("")
-                # print("  Average training loss: {0:.2f}".format(avg_train_loss))
-                # print("  Training epoch took: {:}".format(training_time))
-
-                # ========================================
-                #               Validation
-                # ========================================
-
-                print("")
-                print("Running Validation...")
-
-                # t0 = time.time()
-
-                self.model.eval()
-
-                total_eval_loss = 0
-                nb_eval_steps = 0
-
-                # Evaluate data for one epoch
-                for batch in validation_dataloader:
-
-                    b_input_ids = batch[0].to(self.device)
-                    b_labels = batch[0].to(self.device)
-                    b_masks = batch[1].to(self.device)
-
-                    with torch.no_grad():
-
-                        outputs  = self.model(b_input_ids,
-            #                            token_type_ids=None,
-                                        attention_mask = b_masks,
-                                        labels=b_labels)
-
-                        loss = outputs[0]
-
-                    batch_loss = loss.item()
-                    total_eval_loss += batch_loss
-
-                avg_val_loss = total_eval_loss / len(validation_dataloader)
-
-                # validation_time = model.format_time(time.time() - t0)
-
-                # print("  Validation Loss: {0:.2f}".format(avg_val_loss))
-                # print("  Validation took: {:}".format(validation_time))
-
-                # Record all statistics from this epoch.
-                # training_stats.append(
-                #     {
-                #         'epoch': epoch_i + 1,
-                #         'Training Loss': avg_train_loss,
-                #         'Valid. Loss': avg_val_loss,
-                #         'Training Time': training_time,
-                #         'Validation Time': validation_time
-                #     }
-                # )
-
-            print("")
-            print("Training complete!")
-            # print("Total training took {:} (h:mm:ss)".format(model.format_time(time.time()-total_t0)))
-
+        print("")
+        print("Training complete!")
+        # print("Total training took {:} (h:mm:ss)".format(model.format_time(time.time()-total_t0)))
+        try:
             self.model.save_finetuned_model(output_dir=config["OUTPUT_DIR"])
             status = "Success"
         except Exception as e:
