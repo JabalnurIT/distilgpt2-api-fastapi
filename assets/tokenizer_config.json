@@ -1,41 +1,38 @@
 {
   "add_bos_token": false,
   "add_prefix_space": false,
-  "bos_token": {
-    "__type": "AddedToken",
-    "content": "<|startoftext|>",
-    "lstrip": false,
-    "normalized": true,
-    "rstrip": false,
-    "single_word": false
+  "added_tokens_decoder": {
+    "50256": {
+      "content": "<|endoftext|>",
+      "lstrip": false,
+      "normalized": true,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "50257": {
+      "content": "<|startoftext|>",
+      "lstrip": false,
+      "normalized": true,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "50258": {
+      "content": "<|pad|>",
+      "lstrip": false,
+      "normalized": true,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    }
   },
-  "eos_token": {
-    "__type": "AddedToken",
-    "content": "<|endoftext|>",
-    "lstrip": false,
-    "normalized": true,
-    "rstrip": false,
-    "single_word": false
-  },
+  "bos_token": "<|startoftext|>",
+  "clean_up_tokenization_spaces": true,
+  "eos_token": "<|endoftext|>",
   "errors": "replace",
   "model_max_length": 1024,
-  "name_or_path": "distilgpt2",
-  "pad_token": {
-    "__type": "AddedToken",
-    "content": "<|pad|>",
-    "lstrip": false,
-    "normalized": true,
-    "rstrip": false,
-    "single_word": false
-  },
-  "special_tokens_map_file": null,
+  "pad_token": "<|pad|>",
   "tokenizer_class": "GPT2Tokenizer",
-  "unk_token": {
-    "__type": "AddedToken",
-    "content": "<|endoftext|>",
-    "lstrip": false,
-    "normalized": true,
-    "rstrip": false,
-    "single_word": false
-  }
+  "unk_token": "<|endoftext|>"
 }
