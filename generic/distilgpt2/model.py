@@ -65,13 +65,13 @@ class Model:
         generated = generated.to(self.device)
 
         outputs = self.model.generate(
-                                        generated,
-                                        do_sample=True,
-                                        top_k=50,
-                                        max_length = 300,
-                                        top_p=0.95,
-                                        num_return_sequences=len_texts,
-                                        )
+                        generated,
+                        do_sample=True,
+                        top_k=50,
+                        max_length = 300,
+                        top_p=0.95,
+                        num_return_sequences=len_texts,
+                    )
         text_outputs = []
         for n in outputs:
             text_outputs.append(self.tokenizer.decode(n, skip_special_tokens=True))
@@ -111,30 +111,11 @@ class Model:
         # some parameters I cooked up that work reasonably well
 
         epochs = 10
-        learning_rate = 5e-4
-        warmup_steps = 1e2
-        epsilon = 1e-8
 
         # this produces sample output every 100 steps
         sample_every = 100
 
-        optimizer = AdamW(self.model.parameters(),
-                lr = learning_rate,
-                eps = epsilon
-                )
-        # Total number of training steps is [number of batches] x [number of epochs].
-        # (Note that this is not the same as the number of training samples).
-        total_steps = len(train_dataloader) * epochs
-
-        # Create the learning rate scheduler.
-        # This changes the learning rate as the training loop progresses
-        scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                    num_warmup_steps = warmup_steps,
-                                                    num_training_steps = total_steps)
-
         total_t0 = time.time()
-
-        training_stats = []
 
         self.model = self.model.to(self.device)
 
@@ -196,11 +177,6 @@ class Model:
 
                 loss.backward()
 
-                optimizer.step()
-
-                # scheduler.step()
-
-
             # Calculate the average loss over all of the batches.
             avg_train_loss = total_train_loss / len(train_dataloader)
 
@@ -250,17 +226,6 @@ class Model:
 
             print("  Validation Loss: {0:.2f}".format(avg_val_loss))
             print("  Validation took: {:}".format(validation_time))
-
-            # Record all statistics from this epoch.
-            training_stats.append(
-                {
-                    'epoch': epoch_i + 1,
-                    'Training Loss': avg_train_loss,
-                    'Valid. Loss': avg_val_loss,
-                    'Training Time': training_time,
-                    'Validation Time': validation_time
-                }
-            )
 
         print("")
         print("Training complete!")
