@@ -20,3 +20,4 @@ transformers
 pandas
 datasets
 git-lfs
+progress

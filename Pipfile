@@ -26,6 +26,7 @@ transformers = "*"
 pandas = "*"
 datasets = "*"
 git-lfs = "*"
+progress = "*"
 
 [dev-packages]
 
