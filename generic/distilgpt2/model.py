@@ -118,7 +118,7 @@ class Model:
         # this produces sample output every 100 steps
         sample_every = 100
 
-        optimizer = torch.optim.AdamW(self.model.parameters(),
+        self.optimizer = torch.optim.AdamW(self.model.parameters(),
                 lr = learning_rate,
                 eps = epsilon
                 )
@@ -128,7 +128,7 @@ class Model:
 
         # Create the learning rate scheduler.
         # This changes the learning rate as the training loop progresses
-        scheduler = get_linear_schedule_with_warmup(optimizer,
+        scheduler = get_linear_schedule_with_warmup(self.optimizer,
                                                     num_warmup_steps = warmup_steps,
                                                     num_training_steps = total_steps)
 
@@ -197,11 +197,11 @@ class Model:
                     print('3')
                     self.model.train()
                 print('4')
-                loss.backward()
+                # loss.backward()
                 print('5')
-                optimizer.step()
+                # self.optimizer.step()
                 print('6')
-                scheduler.step()
+                # scheduler.step()
                 print('7')
 
             # Calculate the average loss over all of the batches.
