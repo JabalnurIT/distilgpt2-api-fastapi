@@ -136,7 +136,6 @@ class Model:
             total_t0 = time.time()
 
             training_stats = []
-            print(str(self.device))
 
             self.model = self.model.to(self.device)
 
@@ -158,6 +157,7 @@ class Model:
                 self.model.train()
 
                 for step, batch in enumerate(train_dataloader):
+                    print('1')
 
                     b_input_ids = batch[0].to(self.device)
                     b_labels = batch[0].to(self.device)
@@ -177,6 +177,7 @@ class Model:
                     total_train_loss += batch_loss
 
                     # Get sample every x batches.
+                    print('2')
                     if step % sample_every == 0 and not step == 0:
 
                         # elapsed = model.format_time(time.time() - t0)
@@ -194,14 +195,15 @@ class Model:
                                             )
                         # for i, sample_output in enumerate(sample_outputs):
                         #     print("{}: {}".format(i, tokenizer.decode(sample_output, skip_special_tokens=True)))
-
+                        print('3')
                         self.model.train()
-
+                    print('4')
                     loss.backward()
-
+                    print('5')
                     optimizer.step()
-
+                    print('6')
                     scheduler.step()
+                    print('7')
 
                 # Calculate the average loss over all of the batches.
                 avg_train_loss = total_train_loss / len(train_dataloader)
