@@ -118,7 +118,7 @@ class Model:
         # this produces sample output every 100 steps
         sample_every = 100
 
-        optimizer = torch.optim.AdamW(self.model.parameters(),
+        optimizer = AdamW(self.model.parameters(),
                 lr = learning_rate,
                 eps = epsilon
                 )
@@ -196,7 +196,7 @@ class Model:
 
                 loss.backward()
 
-                # optimizer.step()
+                optimizer.step()
 
                 # scheduler.step()
 
