@@ -55,10 +55,7 @@ class Model:
     def format_time(self, elapsed):
         return str(datetime.timedelta(seconds=int(round((elapsed)))))
 
-    def generate(self, texts):
-        texts = texts.split("###")
-        len_texts = len(texts)
-        
+    def generate(self, num_text):
         self.model.eval()
 
         prompt = "<|startoftext|>"
@@ -72,7 +69,7 @@ class Model:
                         top_k=50,
                         max_length = 300,
                         top_p=0.95,
-                        num_return_sequences=len_texts,
+                        num_return_sequences=num_text,
                     )
         text_outputs = []
         for n in outputs:

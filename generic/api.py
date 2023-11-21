@@ -6,7 +6,7 @@ from .distilgpt2.model import Model, get_model
 app = FastAPI()
 
 
-class NaturalnessRequest(BaseModel):
+class GenericRetrainRequest(BaseModel):
     texts: str
 
     class Config:
@@ -18,11 +18,22 @@ class NaturalnessRequest(BaseModel):
             }
         }
 
+class GenericGenerateRequest(BaseModel):
+    num_text: int
+
+    class Config:
+        from_attributes = True
+        # add example value
+        json_schema_extra = {
+            "example": {
+                "num_text": 5
+            }
+        }
 
 
 
 
-class NaturalnessRetrainResponse(BaseModel):
+class GenericRetrainResponse(BaseModel):
     status: str
 
     class Config:
@@ -32,7 +43,7 @@ class NaturalnessRetrainResponse(BaseModel):
             }
         }
 
-class NaturalnessGenerateResponse(BaseModel):
+class GenericGenerateResponse(BaseModel):
     dataset: str
 
     class Config:
@@ -42,20 +53,18 @@ class NaturalnessGenerateResponse(BaseModel):
             }
         }
 
+@app.post("/retrain", response_model=GenericRetrainResponse)
+async def retrain(request: GenericRetrainRequest, model: Model = Depends(get_model)):
+    status = model.retrain(request.texts)
+    return GenericRetrainResponse(
+        status=status
+    )
 
-
-@app.post("/generate", response_model=NaturalnessGenerateResponse)
-async def generate(request: NaturalnessRequest, model: Model = Depends(get_model)):
-    dataset = model.generate(request.texts)
-    return NaturalnessGenerateResponse(
+@app.post("/generate", response_model=GenericGenerateResponse)
+async def generate(request: GenericGenerateRequest, model: Model = Depends(get_model)):
+    dataset = model.generate(request.num_text)
+    return GenericGenerateResponse(
         dataset=dataset
     )
 
     
-
-@app.post("/retrain", response_model=NaturalnessRetrainResponse)
-async def retrain(request: NaturalnessRequest, model: Model = Depends(get_model)):
-    status = model.retrain(request.texts)
-    return NaturalnessRetrainResponse(
-        status=status
-    )
